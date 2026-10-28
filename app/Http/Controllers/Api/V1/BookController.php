@@ -11,10 +11,22 @@ class BookController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(
-            Book::all(),
+        $query = Book::query();
+
+        if ($request->has('search')) {
+            $searchTerm = $request->input('search');
+            
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('title', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('author', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('genre', 'like', '%' . $searchTerm . '%');
+            });
+        }
+
+        return response()->json(            
+            $query->get(),
             200
         );
     }
@@ -33,7 +45,10 @@ class BookController extends Controller
 
         $book = Book::create($data);
 
-        return response()->json($book, 201);
+        return response()->json([
+            'message' => 'Book created successfully.',
+            'data' => $book,
+        ], 201);
     }
 
     /**
@@ -58,7 +73,10 @@ class BookController extends Controller
 
         $book->update($data);
 
-        return response()->json($book, 200);
+        return response()->json([
+            'message' => 'Book updated successfully.',
+            'data' => $book,
+        ], 200);
     }
 
     /**
